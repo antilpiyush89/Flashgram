@@ -4,14 +4,14 @@
 import express from "express"
 import multer from "multer";
 import { pdfloader,llmAnswer } from "./middlewares";
-import { clerkMiddleware,requireAuth,getAuth } from '@clerk/express'
+// import { clerkMiddleware,requireAuth,getAuth } from '@clerk/express'
 import cors from "cors"
 
 const upload = multer({ dest: "./src/pdf" });
 const app = express()
 app.use(express.json())
-app.use(clerkMiddleware())
-
+// app.use(clerkMiddleware())
+app.use(cors());
 
 
 
@@ -21,21 +21,22 @@ app.use(clerkMiddleware())
 
 
 let parsedpdf: string | null = null
-app.post("/upload", requireAuth(),upload.single('file'), async (req,res) => { //requireAuth redirect unsigned user to signup page, if they visit a protected endpoint
+app.post("/upload",upload.single('file'), async (req,res) => { //requireAuth redirect unsigned user to signup page, if they visit a protected endpoint
   try{
-    const { userId } = getAuth(req)
+    // const { userId } = getAuth(req)
+    console.log("file: ",req.file)
      parsedpdf = await pdfloader(req.file?.path)
      console.log("parsed pdf: ",parsedpdf)
     if(parsedpdf){
       res.status(200).json({
         msg:"file parsing done",
         parsedpdf:parsedpdf,
-        userId:userId
+        // userId:userId
       })
     }else{
       res.status(405).json({
         msg:"Parsing failed",
-        userId:userId
+        // userId:userId
       })
     }
   }catch(e){
@@ -48,9 +49,9 @@ app.post("/upload", requireAuth(),upload.single('file'), async (req,res) => { //
 });
 
 
-app.get("/urFlashcards",requireAuth(),async(req,res)=>{
+app.get("/urFlashcards",async(req,res)=>{
   try{
-    const { userId } = getAuth(req)
+    // const { userId } = getAuth(req)
     const rawanswer= await llmAnswer(parsedpdf) // is a json
     // Example usage:
     // const apiResponse = rawanswer; // The raw Gemini API response
