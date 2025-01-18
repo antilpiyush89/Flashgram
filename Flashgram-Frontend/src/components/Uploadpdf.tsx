@@ -1,6 +1,11 @@
 // import { useAuth } from "@clerk/clerk-react";
+import { useGetflashcards } from "../hooks/useGetflashcards";
 import { useUpload } from "../hooks/useUpload";
 
+interface uploadResponse{
+  msg:string,
+  parsedpdf:string
+}
 
 export const Uploadpdf = ()=>{ 
   // const {userId} = useAuth() //extracting userId, Token from the clerk 
@@ -17,8 +22,13 @@ export const Uploadpdf = ()=>{
       formData.append('file',pdf)
       // formData.append("userId",userId as string)
       console.log("formdata: ",formData)
-      const response = useUpload(formData)
-      console.log("Backend response from /upload",response) 
+      const response = await useUpload(formData) as uploadResponse
+      console.log("Backend response from /upload",response)
+      // const data = await (response as Response).json() //jsonified the data
+      if(response){
+        const flashcards =await useGetflashcards(response?.parsedpdf)
+        console.log("flashcards: ",flashcards)
+      }
     }catch(error){
       console.log('error: ',error)
       console.log("Error while sending the pdf to backend")
