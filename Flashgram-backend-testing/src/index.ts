@@ -4,8 +4,10 @@
 import express from "express"
 import multer from "multer";
 import { pdfloader,llmAnswer } from "./middlewares";
+import fs from "fs"
 // import { clerkMiddleware,requireAuth,getAuth } from '@clerk/express'
 import cors from "cors"
+import { error } from "console";
 
 const upload = multer({ dest: "./src/pdf" });
 const app = express()
@@ -21,11 +23,14 @@ app.use(cors());
 
 
 let parsedpdf: string | null = null
+let pdfpath : string | undefined = undefined
 app.post("/upload",upload.single('file'), async (req,res) => { //requireAuth redirect unsigned user to signup page, if they visit a protected endpoint
   try{
     // const { userId } = getAuth(req)
-    console.log("file: ",req.file)
-     parsedpdf = await pdfloader(req.file?.path)
+     console.log("file: ",req.file)
+     pdfpath = req.file?.path
+     console.log("pdfpath: ",pdfpath)
+     parsedpdf = await pdfloader(pdfpath) //req.file contains the metadata like the file path,encoding,type and n other things, req.file?.path stores file path, where it is getting stored
      console.log("parsed pdf: ",parsedpdf)
     if(parsedpdf){
       res.status(200).json({
@@ -50,7 +55,9 @@ app.post("/upload",upload.single('file'), async (req,res) => { //requireAuth red
 
 
 app.get("/urFlashcards",async(req,res)=>{
+  console.log('pdfpath: ',pdfpath)
   try{
+    console.log('pdfpath: ',pdfpath)
     // const { userId } = getAuth(req)
     const rawanswer= await llmAnswer(parsedpdf) // is a json
     // Example usage:
@@ -58,6 +65,17 @@ app.get("/urFlashcards",async(req,res)=>{
     const formattedFlashcards = JSON.parse(rawanswer)
     console.log("formattedFlashcard",formattedFlashcards)
     if(formattedFlashcards){
+      console.log('pdfpath: ',pdfpath)
+      // Deleting the file after gen flashcards
+      if(pdfpath && fs.existsSync(pdfpath)){
+        fs.unlink(pdfpath,(error)=>{
+          if(error){
+            console.log('failed to delete the file: ',error)
+          }else{
+            console.log("file deleted successfully")
+          }
+        })
+      }
       res.status(200).json({
         rawanswer:rawanswer,
         formattedFlashcards:formattedFlashcards
