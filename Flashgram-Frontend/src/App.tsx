@@ -1,20 +1,10 @@
+import { GridBackgroundDemo } from "./components/Background"
+import { Navbar } from "./components/Navbar"
 
-import './App.css'
-// import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-import { Uploadpdf } from './components/Uploadpdf';
-
-
-
-export default function App() {
-  return (
-    <header>
-      {/* <SignedOut>
-        <SignInButton />
-      </SignedOut>
-      <SignedIn>
-        <UserButton /> */}
-        <Uploadpdf/>
-      {/* </SignedIn> */}
-    </header>
-  );
+function App() {
+  return <div>
+    < GridBackgroundDemo />
+  </div>
 }
+
+export default App
