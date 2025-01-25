@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.21.3",
     "@tabler/icons-react": "^3.28.1",
+    "@tailwindcss/vite": "^4.0.0",
     "@types/axios": "^0.9.36",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",

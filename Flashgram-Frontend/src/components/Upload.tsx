@@ -2,6 +2,13 @@
 import React, { useState } from "react";
 import { FileUpload } from "../ui/file-upload";
 import { motion } from "framer-motion";
+import { useUpload } from "../hooks/useUpload";
+import { useGetflashcards } from "../hooks/useGetflashcards";
+
+interface uploadResponse{
+  msg:string,
+  parsedpdf:string
+}
 
 const innerBorderVariant = {
   initial: {
@@ -30,18 +37,43 @@ const innerBorderVariant = {
 };
 
 export function FileUploadDemo() {
-  const [files, setFiles] = useState<File[]>([]);
-  const handleFileUpload = (files: File[]) => {
-    setFiles(files);
-    console.log(files);
-  };
+  const uploadpdf = async(pdf:File | null)=>{ //the pdf type can be file or null
+    if(!pdf){
+      console.error("No file provided")
+      return
+    }
+    //Pdf exist here
+    try{
+      
+      const formData = new FormData // creating a new object of formdata, this will handle, fileuploads, we can attach pdf and userId to it, and send it to backend
+      formData.append('file',pdf)
+      // formData.append("userId",userId as string)
+      console.log("formdata: ",formData)
+      const response = await useUpload(formData) as uploadResponse
+      console.log("Backend response from /upload",response)
+      // const data = await (response as Response).json() //jsonified the data
+      if(response){
+        const flashcards =await useGetflashcards(response?.parsedpdf)
+        console.log("flashcards: ",flashcards)
+      }
+    }catch(error){
+      console.log('error: ',error)
+      console.log("Error while sending the pdf to backend")
+    }
+  }
+  
 
   return (
     <div className="relative w-full">
       {/* Main upload container */}
       <div className="w-[50vw] max-w-xl mx-auto min-h-96 border border-dashed bg-white/5 dark:bg-black/5 border-neutral-200 dark:border-neutral-800 rounded-lg backdrop-blur-sm">
         <div className="relative">
-          <FileUpload onChange={handleFileUpload} />
+          <FileUpload onChange={(files:File[])=>{ 
+        // const files = e.target?.files;
+        if (files && files.length > 0) {
+          uploadpdf(files[0]);
+        }
+      }} />
           
           {/* Inner Animated Border */}
           <motion.div

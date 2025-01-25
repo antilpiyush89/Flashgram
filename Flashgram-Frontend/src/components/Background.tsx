@@ -1,4 +1,3 @@
-import React from "react";
 import { FlipWordsDemo } from "./Flipwords";
 import { Navbar } from "./Navbar";
 import { FileUploadDemo } from "./Upload";
