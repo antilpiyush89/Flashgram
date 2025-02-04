@@ -1,13 +1,35 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect} from "react";
+import { useNavigate } from "react-router-dom";
 import { FileUpload } from "../ui/file-upload";
 import { motion } from "framer-motion";
 import { useUpload } from "../hooks/useUpload";
 import { useGetflashcards } from "../hooks/useGetflashcards";
+import { flashcardAtom } from "@/atoms/dataAtoms";
+import { useSetRecoilState,useRecoilValue } from "recoil";
 
 interface uploadResponse{
   msg:string,
   parsedpdf:string
+}
+
+
+interface flashcardResponse{
+    formattedFlashcards:{
+      flashcards:QAArray[]
+    },
+    rawanswer:string
+      
+}
+
+export interface QAArray{
+  Question:{
+    text:string,
+    hint:string
+  },
+  Answer:{
+    text:string
+  }
 }
 
 const innerBorderVariant = {
@@ -37,6 +59,20 @@ const innerBorderVariant = {
 };
 
 export function FileUploadDemo() {
+  const setFlashcards = useSetRecoilState(flashcardAtom)
+  const flashcardval = useRecoilValue(flashcardAtom)
+  const navigate = useNavigate()
+  // Recoil updates the atoms asynchronously, so we need to use useEffect to see the updated value
+  useEffect(()=>{
+    //only go to /flashcard if flashcardval is not empty
+    if(flashcardval.length>0){
+      console.log("flashcard val inside atom: ",flashcardval)
+      navigate("/flashcard")
+    }
+
+  },[flashcardval])
+
+
   const uploadpdf = async(pdf:File | null)=>{ //the pdf type can be file or null
     if(!pdf){
       console.error("No file provided")
@@ -47,15 +83,21 @@ export function FileUploadDemo() {
       
       const formData = new FormData // creating a new object of formdata, this will handle, fileuploads, we can attach pdf and userId to it, and send it to backend
       formData.append('file',pdf)
+      console.log("above setflashcard")
+      console.log("below setflashcard")
       // formData.append("userId",userId as string)
-      console.log("formdata: ",formData)
+      // console.log("formdata: ",formData)
       const response = await useUpload(formData) as uploadResponse
-      console.log("Backend response from /upload",response)
+      // console.log("Backend response from /upload",response)
       // const data = await (response as Response).json() //jsonified the data
       if(response){
-        const flashcards =await useGetflashcards(response?.parsedpdf)
-        console.log("flashcards: ",flashcards)
-      }
+        const flashcardsJSON =await useGetflashcards(response?.parsedpdf) as flashcardResponse
+        if(flashcardsJSON){
+          console.log(flashcardsJSON.formattedFlashcards.flashcards)
+          setFlashcards(flashcardsJSON.formattedFlashcards.flashcards)
+          
+          // console.log("flashcard val inside atom: ",flashcardval)
+      }}
     }catch(error){
       console.log('error: ',error)
       console.log("Error while sending the pdf to backend")
