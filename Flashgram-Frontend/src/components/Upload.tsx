@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect} from "react";
+import React, { useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { FileUpload } from "../ui/file-upload";
 import { motion } from "framer-motion";
@@ -7,6 +7,7 @@ import { useUpload } from "../hooks/useUpload";
 import { useGetflashcards } from "../hooks/useGetflashcards";
 import { flashcardAtom } from "@/atoms/dataAtoms";
 import { useSetRecoilState,useRecoilValue } from "recoil";
+import { loaderAtom } from "@/atoms/dataAtoms";
 
 interface uploadResponse{
   msg:string,
@@ -61,12 +62,15 @@ const innerBorderVariant = {
 export function FileUploadDemo() {
   const setFlashcards = useSetRecoilState(flashcardAtom)
   const flashcardval = useRecoilValue(flashcardAtom)
+  const setLoader = useSetRecoilState(loaderAtom)
   const navigate = useNavigate()
   // Recoil updates the atoms asynchronously, so we need to use useEffect to see the updated value
+
   useEffect(()=>{
     //only go to /flashcard if flashcardval is not empty
     if(flashcardval.length>0){
       console.log("flashcard val inside atom: ",flashcardval)
+      setLoader(false)
       navigate("/flashcard")
     }
 
@@ -80,7 +84,7 @@ export function FileUploadDemo() {
     }
     //Pdf exist here
     try{
-      
+      setLoader(true)
       const formData = new FormData // creating a new object of formdata, this will handle, fileuploads, we can attach pdf and userId to it, and send it to backend
       formData.append('file',pdf)
       console.log("above setflashcard")
@@ -101,6 +105,7 @@ export function FileUploadDemo() {
     }catch(error){
       console.log('error: ',error)
       console.log("Error while sending the pdf to backend")
+      setLoader(false)
     }
   }
   
@@ -110,7 +115,7 @@ export function FileUploadDemo() {
       {/* Main upload container */}
       <div className="w-[50vw] max-w-xl mx-auto min-h-96 border border-dashed bg-white/5 dark:bg-black/5 border-neutral-200 dark:border-neutral-800 rounded-lg backdrop-blur-sm">
         <div className="relative">
-          <FileUpload onChange={(files:File[])=>{ 
+          <FileUpload onChange={(files:File[])=>{
         // const files = e.target?.files;
         if (files && files.length > 0) {
           uploadpdf(files[0]);

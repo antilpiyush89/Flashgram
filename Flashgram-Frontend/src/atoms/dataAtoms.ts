@@ -5,3 +5,7 @@ export const flashcardAtom = atom<QAArray[]>({
   key: "flashcardAtom",
   default: []
 })
+export const loaderAtom = atom<boolean>({
+  key: "loader",
+  default: false
+})

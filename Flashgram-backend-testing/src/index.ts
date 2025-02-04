@@ -60,6 +60,7 @@ app.get("/urFlashcards",async(req,res)=>{
     console.log('pdfpath: ',pdfpath)
     // const { userId } = getAuth(req)
     const rawanswer= await llmAnswer(parsedpdf) // is a json
+    console.log("rawanswer: ",rawanswer)
     // Example usage:
     // const apiResponse = rawanswer; // The raw Gemini API response
     const formattedFlashcards = JSON.parse(rawanswer)
@@ -86,6 +87,15 @@ app.get("/urFlashcards",async(req,res)=>{
       })
     }
   }catch(e){
+    if(pdfpath && fs.existsSync(pdfpath)){
+      fs.unlink(pdfpath,(error)=>{
+        if(error){
+          console.log('failed to delete the file: ',error)
+        }else{
+          console.log("file deleted successfully")
+        }
+      })
+    }
     res.status(500).json({
       error:e,
       msg:"No flashcard available"
