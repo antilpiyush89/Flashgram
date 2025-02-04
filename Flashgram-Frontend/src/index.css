@@ -66,14 +66,14 @@
   }
 }
 
-/* Hide scrollbar but keep functionality */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+/* Hide all scrollbars */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 
 /* Custom styles for Paper Gram look */
@@ -89,4 +89,108 @@
     rgba(37, 38, 43, 0.95)
   );
   backdrop-filter: blur(10px);
+}
+
+/* Glowing card styles */
+.glow-card-wrapper {
+  padding: 1px;
+  border-radius: 0.75rem;
+  background: #25262b;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Moving gradient border */
+.moving-border {
+  position: absolute;
+  inset: -150%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    #40e6b4 0deg,
+    rgba(64, 230, 180, 0.3) 60deg,
+    rgba(64, 230, 180, 0.1) 120deg,
+    transparent 180deg,
+    rgba(64, 230, 180, 0.1) 240deg,
+    rgba(64, 230, 180, 0.3) 300deg,
+    #40e6b4 360deg
+  );
+  animation: rotate 4s linear infinite;
+  filter: blur(8px);
+}
+
+/* Gradient mask for border */
+.glow-card-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(64, 230, 180, 0.3) 0%,
+    rgba(64, 230, 180, 0.1) 50%,
+    rgba(64, 230, 180, 0.05) 100%
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Card content background */
+.glow-card-wrapper > div:last-child {
+  background: #25262b;
+  border-radius: inherit;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive padding adjustments */
+@media (max-width: 768px) {
+  .glow-card-wrapper {
+    padding: 1.5px;
+  }
+  
+  .moving-border {
+    filter: blur(6px);
+  }
+}
+
+/* Optional: Slow down animation on hover */
+.glow-card-wrapper:hover .moving-border {
+  animation-duration: 6s;
+}
+
+/* Custom scrollbar for content area */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(64, 230, 180, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(64, 230, 180, 0.3);
+  border-radius: 20px;
+}
+
+@keyframes pulse-glow {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.5; }
 }
