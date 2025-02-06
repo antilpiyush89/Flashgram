@@ -30,6 +30,15 @@ export const Flashcard = () => {
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [flashcardTitle, setFlashcardTitle] = useState("Untitled Flashcard");
   const [showUpload, setShowUpload] = useState(false);
+  const [testMode, setTestMode] = useState<{ [key: number]: boolean }>({});
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
+  const [scores, setScores] = useState<{ [key: number]: number }>({});
+  const [attemptedQuestions, setAttemptedQuestions] = useState(0);
+  const [showComparison, setShowComparison] = useState<{ [key: number]: boolean }>({});
+  const correctSound = useRef(typeof Audio !== 'undefined' ? new Audio('/correct.mp3') : null);
+  const wrongSound = useRef(typeof Audio !== 'undefined' ? new Audio('/wrong.mp3') : null);
+  const [showResult, setShowResult] = useState(false);
+  const [lastScore, setLastScore] = useState(0);
   
   const { scrollYProgress } = useScroll({
     container: containerRef,
@@ -69,12 +78,95 @@ export const Flashcard = () => {
     setShowUpload(true);
   };
 
+  const playSound = (isCorrect: boolean) => {
+    try {
+      if (isCorrect && correctSound.current) {
+        correctSound.current.currentTime = 0;
+        correctSound.current.play();
+      } else if (!isCorrect && wrongSound.current) {
+        wrongSound.current.currentTime = 0;
+        wrongSound.current.play();
+      }
+    } catch (error) {
+      console.error('Error playing sound:', error);
+    }
+  };
+
+  const handleAnswerSubmit = (index: number, answer: string) => {
+    const score = Math.floor(Math.random() * 101);
+    const isCorrect = score >= 70;
+    
+    playSound(isCorrect);
+    setLastScore(score);
+    setShowResult(true);
+    
+    // Hide result after 1.5s
+    setTimeout(() => setShowResult(false), 1500);
+    
+    setScores(prev => ({
+      ...prev,
+      [index]: score
+    }));
+    
+    setUserAnswers(prev => ({
+      ...prev,
+      [index]: answer
+    }));
+    
+    setAttemptedQuestions(prev => 
+      scores[index] === undefined ? prev + 1 : prev
+    );
+    
+    setTestMode(prev => ({
+      ...prev,
+      [index]: false
+    }));
+
+    showResultIndicator(isCorrect, index);
+  };
+
+  const showResultIndicator = (isCorrect: boolean, index: number) => {
+    const indicator = document.createElement('div');
+    indicator.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+      text-6xl z-[100] ${isCorrect ? 'text-green-500' : 'text-red-500'}`;
+    indicator.innerHTML = isCorrect ? '✓' : '✗';
+    
+    document.body.appendChild(indicator);
+
+    // Add animation classes
+    indicator.animate([
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(0.5)' },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(1.2)' },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(1.2)' }
+    ], {
+      duration: 1500,
+      easing: 'ease-out'
+    });
+
+    // Remove the indicator after animation
+    setTimeout(() => {
+      document.body.removeChild(indicator);
+      setShowComparison(prev => ({
+        ...prev,
+        [index]: true
+      }));
+    }, 1500);
+  };
+
+  const closeTestMode = (index: number) => {
+    setTestMode(prev => ({
+      ...prev,
+      [index]: false
+    }));
+  };
+
   if (showUpload) {
     return <UploadArea onUploadComplete={() => setShowUpload(false)} />;
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1b1e] relative">
+    <div className="min-h-screen bg-[#1a1b1e] relative overflow-hidden">
       <style>{styles}</style>
       
       {/* Menu Button */}
@@ -84,6 +176,21 @@ export const Flashcard = () => {
       >
         <Menu className="w-6 h-6" />
       </button>
+
+      {/* Progress bar */}
+      <div className="fixed top-4 right-4 z-50 bg-[#25262b] p-4 rounded-lg">
+        <div className="text-[#40e6b4] text-sm font-mono mb-2">
+          Progress: {attemptedQuestions}/{flashcardData.length}
+        </div>
+        <div className="w-48 h-2 bg-[#1a1b1e] rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-[#40e6b4] transition-all duration-300"
+            style={{ 
+              width: `${(attemptedQuestions / flashcardData.length) * 100}%` 
+            }}
+          />
+        </div>
+      </div>
 
       {/* Flashcards Container */}
       <div className="h-screen overflow-y-scroll snap-y snap-mandatory hide-scrollbar">
@@ -152,34 +259,52 @@ export const Flashcard = () => {
                     </div>
                   )}
 
-                  {/* Answer section */}
-                  <AnimatePresence mode="sync">
-                    {revealedCards[index] && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{
-                          opacity: { duration: 0.2 },
-                          height: { duration: 0.3 }
-                        }}
-                      >
-                        <div className="mt-6 pt-6 border-t border-gray-700">
-                          <h3 className="text-[#40e6b4] text-lg font-mono mb-3">Answer:</h3>
-                          <div className="text-white text-xl font-mono leading-relaxed">
-                            {element.Answer.text}
-                          </div>
+                  {/* Test yourself section */}
+                  {!revealedCards[index] && !testMode[index] && !scores[index] && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTestMode(prev => ({ ...prev, [index]: true }));
+                      }}
+                      className="mt-4 text-[#40e6b4] hover:text-[#30cfd0] transition-colors font-mono"
+                    >
+                      Test yourself →
+                    </button>
+                  )}
+
+                  {/* Answer Comparison Section */}
+                  {scores[index] !== undefined && revealedCards[index] && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 space-y-4"
+                    >
+                      <div className="text-center mb-4">
+                        <div className="inline-block bg-[#1a1b1e] rounded-lg px-4 py-2">
+                          <span className="text-[#40e6b4] font-mono">Match Score: {scores[index]}%</span>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      </div>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="bg-[#1a1b1e] rounded-xl p-6 border border-[#2c2d31]">
+                          <div className="text-[#40e6b4] font-mono mb-3 text-lg">Your Answer</div>
+                          <div className="text-white font-mono leading-relaxed">{userAnswers[index]}</div>
+                        </div>
+                        <div className="bg-[#1a1b1e] rounded-xl p-6 border border-[#2c2d31]">
+                          <div className="text-[#40e6b4] font-mono mb-3 text-lg">Correct Answer</div>
+                          <div className="text-white font-mono leading-relaxed">{element.Answer.text}</div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* Footer */}
                 <div className="text-center mt-6">
-                  <p className="text-gray-500 text-sm font-mono">
-                    {revealedCards[index] ? "Tap to hide answer" : "Tap to reveal answer"}
-                  </p>
+                  {scores[index] !== undefined && (
+                    <p className="text-gray-500 text-sm font-mono">
+                      {revealedCards[index] ? "Tap to hide comparison" : "Tap to show comparison"}
+                    </p>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -217,12 +342,114 @@ export const Flashcard = () => {
         flashcardTitle={flashcardTitle}
         onTitleChange={setFlashcardTitle}
       />
+
+      {/* Test Modal Overlay */}
+      {Object.entries(testMode).map(([index, isActive]) => 
+        isActive && (
+          <div 
+            key={`test-modal-${index}`}
+            className="fixed inset-0 z-50 overflow-hidden bg-[#1a1b1e]/90 backdrop-blur-sm"
+          >
+            <div className="min-h-screen flex items-center justify-center p-4">
+              <div 
+                className="relative w-full max-w-2xl bg-[#25262b] rounded-xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Gradient border effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#40e6b4] to-[#30cfd0] opacity-20" />
+                
+                {/* Content container */}
+                <div className="relative p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-[#40e6b4] text-xl font-mono">Test Your Knowledge</h3>
+                    <button 
+                      onClick={() => setTestMode(prev => ({ ...prev, [index]: false }))}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="text-white text-lg font-mono mb-6">
+                    {flashcardData[Number(index)].Question.text}
+                  </div>
+
+                  <textarea
+                    className="w-full bg-[#1a1b1e] border border-[#40e6b4] rounded-lg p-4 
+                             text-white font-mono focus:outline-none focus:ring-2 
+                             focus:ring-[#40e6b4] resize-none min-h-[150px]"
+                    placeholder="Enter your answer..."
+                    value={userAnswers[Number(index)] || ''}
+                    onChange={(e) => setUserAnswers(prev => ({
+                      ...prev,
+                      [index]: e.target.value
+                    }))}
+                    autoFocus
+                  />
+
+                  <div className="flex justify-end mt-6 gap-4">
+                    <button
+                      onClick={() => setTestMode(prev => ({ ...prev, [index]: false }))}
+                      className="px-4 py-2 text-gray-400 hover:text-white transition-colors font-mono"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleAnswerSubmit(Number(index), userAnswers[Number(index)] || '')}
+                      className="px-6 py-2 bg-[#40e6b4] text-[#1a1b1e] rounded-lg font-mono 
+                               hover:bg-[#30cfd0] transition-colors"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* Result Indicator */}
+      <AnimatePresence>
+        {showResult && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1a1b1e]/80"
+          >
+            <div className="bg-[#25262b] rounded-xl p-8 shadow-xl">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className={`text-8xl ${lastScore >= 70 ? 'text-[#40e6b4]' : 'text-red-500'}`}
+              >
+                {lastScore >= 70 ? '✓' : '✗'}
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
+
 // Add this CSS to your global styles or index.css
 const styles = `
+  /* Ensure the modal background stays dark */
+  body.modal-open {
+    overflow: hidden;
+    background-color: #1a1b1e;
+  }
+
+  /* Prevent any white backgrounds from showing */
+  #__next, 
+  body, 
+  html {
+    background-color: #1a1b1e;
+  }
   .gradient-border {
     position: relative;
     background: #1a1b1e;
@@ -284,4 +511,29 @@ const styles = `
       --border-angle: 1turn;
     }
   }
+
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes popOut {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0; }
+  }
+
+  .result-indicator {
+    animation: popIn 0.5s ease-out forwards;
+  }
+
+  .result-indicator.hide {
+    animation: popOut 0.5s ease-out forwards;
+  }
 `;
+
+/* Add to your global CSS */
