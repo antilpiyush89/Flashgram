@@ -7,55 +7,51 @@ import { HoverBorderGradient } from "../ui/hover-border-gradient";
 import RotatingCardsLoader from "./loader";
 import { useRecoilValue } from "recoil";
 import { loaderAtom } from "@/atoms/dataAtoms";
+
 export function GridBackgroundDemo() {
   const loader = useRecoilValue(loaderAtom);
   
   return (
-    <div className="">
+    <div className="bg-[#0d1117]">
       <div className={`relative ${loader ? 'blur-sm opacity-80' : ''} transition-all duration-300`}>
         <Navbar />
-        <div className="min-h-screen w-full dark:bg-black bg-white dark:bg-grid-white/[0.1] bg-grid-black/[0.1] relative">
-          {/* Radial gradient background with enhanced gradient */}
-          <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_25%,black)]">
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-50/20 via-transparent to-pink-50/20 dark:from-blue-900/10 dark:to-purple-900/10"></div>
+        <div className="min-h-screen w-full bg-[#0d1117] relative">
+          {/* Grid pattern overlay with fade effect */}
+          <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#0d1117] to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0d1117] to-transparent" />
+            <div className="absolute top-0 left-0 bottom-0 w-32 bg-gradient-to-r from-[#0d1117] to-transparent" />
+            <div className="absolute top-0 right-0 bottom-0 w-32 bg-gradient-to-l from-[#0d1117] to-transparent" />
+          </div>
+          
+          {/* Radial gradient overlay */}
+          <div className="absolute pointer-events-none inset-0 flex items-center justify-center [mask-image:radial-gradient(ellipse_at_center,transparent_25%,black)]">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#1a2332]/20 via-transparent to-[#0d1117]"></div>
           </div>
 
-          {/* Main content container - reduced pt-20 to pt-12 and space-y-12 to space-y-8 */}
-          <div className="relative flex flex-col items-center justify-start -t-48 px-4 space-y-8">
-            {/* Animated words */}
+          {/* Main content container */}
+          <div className="relative flex flex-col items-center justify-start pt-12 px-4 space-y-8">
             <div className="w-full max-w-2xl">
               <FlipWordsDemo />
             </div>
 
-            {/* Subheadings - reduced space-y-2 to space-y-1 */}
             <div className="text-center space-y-1">
-              <p className="text-lg md:text-xl text-gray-500 font-medium -mt-48">
+              <p className="text-lg md:text-xl text-gray-400 font-medium">
                 Learn Effortlessly: Convert PDFs into Scrollable Flashcards!
               </p>
-              <p className="text-lg md:text-xl text-gray-500 font-medium">
+              <p className="text-lg md:text-xl text-gray-400 font-medium">
                 Now learning is just a scroll away!
               </p>
             </div>
 
-            {/* CTA Button - reduced p-4 to p-3 and gap-4 to gap-3 */}
             <HoverBorderGradient
               containerClassName="rounded"
               as="button"
-              className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+              className="bg-[#0d1117] text-[#4ff0d1] hover:text-white flex items-center space-x-2"
             >
               <span>Get started Now</span> 
             </HoverBorderGradient>
 
-            <div className=" w-full max-w-md bg-gray-500/50 backdrop-blur-sm p-3 rounded-full flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
-              <div className="text-white text-center md:text-left text-sm md:text-base">
-                Join the future of learning now!
-              </div>
-              <button className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 transition-colors rounded-full py-2 px-6 text-white font-medium">
-                Get Started Now
-              </button>
-            </div>
-
-            {/* File upload section - reduced mt-12 to mt-8 */}
             <div className="w-full max-w-2xl mt-8">
               <FileUploadDemo />
             </div>
@@ -70,7 +66,7 @@ export function GridBackgroundDemo() {
       </div>
       
       {loader && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0d1117]/50">
           <RotatingCardsLoader />
         </div>
       )}
