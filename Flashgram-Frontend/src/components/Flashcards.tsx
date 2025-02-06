@@ -9,7 +9,7 @@ import { UploadArea } from "./UploadArea";
 interface FlashcardElement {
   Question: {
     text: string;
-    hint?: string;
+    hint: string;
   };
   Answer: {
     text: string;
