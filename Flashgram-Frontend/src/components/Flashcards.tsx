@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import { useRecoilValue } from "recoil";
 import { flashcardAtom } from "@/atoms/dataAtoms";
-import { Heart, Menu } from "lucide-react";
+import { Heart, Menu, RotateCcw } from "lucide-react";
 import { Dashboard } from "./Dashboard";
 import { UploadArea } from "./UploadArea";
 
@@ -39,6 +39,7 @@ export const Flashcard = () => {
   const wrongSound = useRef(typeof Audio !== 'undefined' ? new Audio('/wrong.mp3') : null);
   const [showResult, setShowResult] = useState(false);
   const [lastScore, setLastScore] = useState(0);
+  const [showLikedQuestions, setShowLikedQuestions] = useState(false);
   
   const { scrollYProgress } = useScroll({
     container: containerRef,
@@ -57,8 +58,9 @@ export const Flashcard = () => {
     }));
   };
 
-  const toggleLike = (index: number, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const toggleLike = (index: number, event?: React.MouseEvent) => {
+    if (event) event.stopPropagation();
+    
     setLikedCards(prev => ({
       ...prev,
       [index]: !prev[index]
@@ -161,6 +163,27 @@ export const Flashcard = () => {
     }));
   };
 
+  // Add this function to handle restart
+  const handleRestart = () => {
+    setRevealedCards({});
+    setTestMode({});
+    setUserAnswers({});
+    setScores({});
+    setAttemptedQuestions(0);
+    setShowComparison({});
+    setLikedCards({});
+    setShowLikeAnimation({});
+    
+    // Automatically scroll to top
+    const container = document.querySelector('.scroll-container');
+    if (container) {
+      container.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   if (showUpload) {
     return <UploadArea onUploadComplete={() => setShowUpload(false)} />;
   }
@@ -177,160 +200,196 @@ export const Flashcard = () => {
         <Menu className="w-6 h-6" />
       </button>
 
-      {/* Progress bar */}
-      <div className="fixed top-4 right-4 z-50 bg-[#25262b] p-4 rounded-lg">
-        <div className="text-[#40e6b4] text-sm font-mono mb-2">
-          Progress: {attemptedQuestions}/{flashcardData.length}
+      {/* Progress and Likes Bar */}
+      <div className="fixed top-4 right-4 z-50 flex items-start gap-4">
+        {/* Progress */}
+        <div className="bg-[#25262b] p-4 rounded-lg">
+          <div className="text-[#40e6b4] text-sm font-mono mb-2">
+            Progress: {attemptedQuestions}/{flashcardData.length}
+          </div>
+          <div className="w-48 h-2 bg-[#1a1b1e] rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-[#40e6b4] transition-all duration-300"
+              style={{ 
+                width: `${(attemptedQuestions / flashcardData.length) * 100}%` 
+              }}
+            />
+          </div>
         </div>
-        <div className="w-48 h-2 bg-[#1a1b1e] rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-[#40e6b4] transition-all duration-300"
-            style={{ 
-              width: `${(attemptedQuestions / flashcardData.length) * 100}%` 
-            }}
-          />
-        </div>
+
+        {/* Liked Flashcards */}
+        {/* <button 
+          onClick={() => setShowLikedQuestions(!showLikedQuestions)}
+          className="bg-[#25262b] p-4 rounded-lg"
+        >
+          <div className="text-[#40e6b4] text-sm font-mono mb-2 flex items-center gap-2">
+            <Heart className="w-4 h-4" />
+            <span>Liked</span>
+          </div>
+          <div className="w-48 h-2 bg-[#1a1b1e] rounded-full"></div>
+        </button> */}
       </div>
 
+      {/* Return to Original Deck Button - Only shown when viewing liked cards */}
+      {/* {showLikedQuestions && (
+        <button
+          onClick={() => setShowLikedQuestions(false)}
+          className="fixed top-20 right-4 z-50 bg-[#25262b] px-4 py-2 rounded-lg text-[#40e6b4] font-mono text-sm hover:bg-[#2c2d31] transition-colors"
+        >
+          View Original Deck */}
+        {/* </button> */}
+      {/* )} */}
+
       {/* Flashcards Container */}
-      <div className="h-screen overflow-y-scroll snap-y snap-mandatory hide-scrollbar">
-        {flashcardData.map((element: FlashcardElement, index) => (
-          <motion.div
-            key={index}
-            className="h-screen w-full flex items-center justify-center snap-start"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, margin: "-20%" }}
-            transition={{
-              type: "spring",
-              damping: 25,
-              stiffness: 200,
-            }}
-          >
-            {/* Gradient border wrapper */}
-            <motion.div 
-              className="relative w-[90%] max-w-3xl glow-card-wrapper rounded-xl"
-              animate={{ 
-                height: revealedCards[index] ? "auto" : "280px"
-              }}
-              transition={{
-                height: { type: "spring", stiffness: 300, damping: 30 }
-              }}
-            >
-              {/* Moving gradient border */}
-              <div className="absolute inset-0 rounded-xl overflow-hidden">
-                <div className="moving-border" />
-              </div>
-              
-              {/* Main card content */}
-              <div 
-                className="relative w-full h-full bg-[#25262b] rounded-xl p-6 pb-8 md:p-8 cursor-pointer z-10"
-                onClick={() => toggleReveal(index)}
+      <div className="h-[100dvh] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-container">
+        {/* Filter flashcards based on showLikedQuestions state */}
+        {flashcardData
+          .filter((_, index) => !showLikedQuestions || likedCards[index])
+          .map((element: FlashcardElement, index) => {
+            // Get the original index from the full deck
+            const originalIndex = showLikedQuestions 
+              ? flashcardData.findIndex((_, i) => likedCards[i] && !flashcardData.slice(0, i).some((_, j) => likedCards[j]))
+              : index;
+
+            return (
+              <motion.div
+                key={originalIndex}
+                data-card-index={originalIndex}
+                className="h-[100dvh] w-full flex items-center justify-center snap-start relative"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, margin: "-20%" }}
+                onDoubleClick={() => toggleLike(originalIndex)}
               >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#40e6b4]" />
-                    <h2 className="text-[#40e6b4] text-lg font-mono">Question {index + 1}</h2>
-                  </div>
-                  <motion.button
-                    onClick={(e) => toggleLike(index, e)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="z-10"
+                {/* Like Animation Overlay */}
+                <AnimatePresence>
+                  {showLikeAnimation[originalIndex] && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1.2 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="absolute z-50 pointer-events-none"
+                    >
+                      <Heart className="w-24 h-24 text-[#40e6b4] fill-current" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Card Container */}
+                <div className="w-[90%] max-w-md px-4">
+                  <motion.div 
+                    className="relative w-full bg-[#25262b] rounded-xl overflow-hidden"
                   >
-                    <Heart
-                      className={`w-6 h-6 transition-colors duration-200 ${
-                        likedCards[index] ? 'fill-red-500 text-red-500' : 'text-gray-400'
-                      }`}
-                    />
-                  </motion.button>
+                    <div className="p-6 space-y-6">
+                      {/* Question Header with Like Button */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-[#40e6b4]" />
+                          <h2 className="text-[#40e6b4] text-lg font-mono">Question {originalIndex + 1}</h2>
+                        </div>
+                        <button
+                          onClick={(e) => toggleLike(originalIndex, e)}
+                          className="text-gray-400 hover:text-[#40e6b4] transition-colors"
+                        >
+                          <Heart 
+                            className={`w-6 h-6 ${likedCards[originalIndex] ? 'fill-[#40e6b4] text-[#40e6b4]' : ''}`} 
+                          />
+                        </button>
+                      </div>
+
+                      {/* Question Text */}
+                      <div className="text-white text-xl font-mono leading-relaxed">
+                        {element.Question.text}
+                      </div>
+
+                      {/* Test Yourself Button */}
+                      {!scores[originalIndex] && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTestMode(prev => ({ ...prev, [originalIndex]: true }));
+                          }}
+                          className="mt-8 text-[#40e6b4] hover:text-[#30cfd0] transition-colors font-mono"
+                        >
+                          Test yourself →
+                        </button>
+                      )}
+
+                      {/* Tap to Reveal Answer Button */}
+                      {scores[originalIndex] && !revealedCards[originalIndex] && (
+                        <button
+                          onClick={() => toggleReveal(originalIndex)}
+                          className="mt-8 text-[#40e6b4] hover:text-[#30cfd0] transition-colors font-mono"
+                        >
+                          Tap to reveal answer →
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
                 </div>
 
-                {/* Question content */}
-                <div className="space-y-4">
-                  <div className="text-white text-xl font-mono leading-relaxed">
-                    {element.Question.text}
-                  </div>
-                  
-                  {element.Question.hint && (
-                    <div className="text-gray-400 text-lg font-mono leading-relaxed">
-                      Hint: {element.Question.hint}
-                    </div>
-                  )}
-
-                  {/* Test yourself section */}
-                  {!revealedCards[index] && !testMode[index] && !scores[index] && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTestMode(prev => ({ ...prev, [index]: true }));
-                      }}
-                      className="mt-4 text-[#40e6b4] hover:text-[#30cfd0] transition-colors font-mono"
+                {/* Answer Comparison Modal */}
+                {revealedCards[originalIndex] && scores[originalIndex] && (
+                  <div 
+                    className="fixed inset-0 z-40 flex items-center justify-center bg-[#1a1b1e]/80 backdrop-blur-sm"
+                    onClick={() => toggleReveal(originalIndex)}
+                  >
+                    <motion.div 
+                      className="w-[90%] max-w-md bg-[#25262b] rounded-xl p-6 space-y-6"
+                      onClick={(e) => e.stopPropagation()}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
                     >
-                      Test yourself →
-                    </button>
-                  )}
-
-                  {/* Answer Comparison Section */}
-                  {scores[index] !== undefined && revealedCards[index] && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-6 space-y-4"
-                    >
-                      <div className="text-center mb-4">
+                      <div className="text-center mb-6">
                         <div className="inline-block bg-[#1a1b1e] rounded-lg px-4 py-2">
-                          <span className="text-[#40e6b4] font-mono">Match Score: {scores[index]}%</span>
+                          <span className="text-[#40e6b4] font-mono">Match Score: {scores[originalIndex]}%</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="bg-[#1a1b1e] rounded-xl p-6 border border-[#2c2d31]">
-                          <div className="text-[#40e6b4] font-mono mb-3 text-lg">Your Answer</div>
-                          <div className="text-white font-mono leading-relaxed">{userAnswers[index]}</div>
+                      <div className="space-y-4">
+                        <div className="bg-[#1a1b1e] rounded-xl p-4 border border-[#2c2d31]">
+                          <div className="text-[#40e6b4] font-mono mb-2">Your Answer</div>
+                          <div className="text-white font-mono leading-relaxed">{userAnswers[originalIndex]}</div>
                         </div>
-                        <div className="bg-[#1a1b1e] rounded-xl p-6 border border-[#2c2d31]">
-                          <div className="text-[#40e6b4] font-mono mb-3 text-lg">Correct Answer</div>
+                        <div className="bg-[#1a1b1e] rounded-xl p-4 border border-[#2c2d31]">
+                          <div className="text-[#40e6b4] font-mono mb-2">Correct Answer</div>
                           <div className="text-white font-mono leading-relaxed">{element.Answer.text}</div>
                         </div>
                       </div>
                     </motion.div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
 
-                {/* Footer */}
-                <div className="text-center mt-6">
-                  {scores[index] !== undefined && (
-                    <p className="text-gray-500 text-sm font-mono">
-                      {revealedCards[index] ? "Tap to hide comparison" : "Tap to show comparison"}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+        {/* Show message if no liked cards */}
+        {showLikedQuestions && Object.values(likedCards).filter(Boolean).length === 0 && (
+          <div className="h-[100dvh] w-full flex items-center justify-center">
+            <div className="text-[#40e6b4] font-mono text-lg text-center">
+              No liked flashcards yet
+            </div>
+          </div>
+        )}
 
-            {/* Like animation overlay */}
-            <AnimatePresence>
-              {showLikeAnimation[index] && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                >
-                  <Heart className="w-24 h-24 text-red-500 fill-red-500" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))}
-      </div>
+        {/* Restart Session at Bottom */}
+        <div className="h-[100dvh] w-full flex flex-col items-center justify-center snap-start relative space-y-12">
+          <div className="flex flex-col items-center gap-4">
+            <span className="text-[#40e6b4] font-mono text-lg">Session Complete</span>
+            <button
+              onClick={handleRestart}
+              className="flex items-center gap-2 px-6 py-3 bg-[#40e6b4] text-[#1a1b1e] rounded-lg font-mono hover:bg-[#30cfd0] transition-colors"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <span>Restart</span>
+            </button>
+          </div>
 
-      {/* Footer credit */}
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center items-center gap-2 z-50">
-        <div className="credit-text">
-          made by <span className="credit-highlight">Bijlee vibhag</span>
+          {/* Credit Badge */}
+          <div className="bg-[#25262b] px-4 py-2 rounded-full border border-[#2c2d31] backdrop-blur-sm">
+            <span className="font-mono text-sm text-gray-400">
+              made by <span className="text-[#40e6b4]">Bijlee Vibhag</span>
+            </span>
+          </div>
         </div>
       </div>
 
