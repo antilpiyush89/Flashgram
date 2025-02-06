@@ -274,3 +274,28 @@ html {
 .font-sf-pro {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 }
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 2px;  /* even thinner scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;  /* transparent track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3ad1b3;  /* neon green */
+  border-radius: 5px;
+}
+
+/* Hide the arrows/buttons */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3ad1b3 transparent;
+}
