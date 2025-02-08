@@ -12,10 +12,10 @@ export function GridBackgroundDemo() {
   const loader = useRecoilValue(loaderAtom);
   
   return (
-    <div className="bg-[#0d1117]">
+    <div className="bg-[#0d1117] min-h-screen w-full overflow-x-hidden">
       <div className={`relative ${loader ? 'blur-sm opacity-80' : ''} transition-all duration-300`}>
         <Navbar />
-        <div className="min-h-screen w-full bg-[#0d1117] relative">
+        <div className="w-full bg-[#0d1117] relative">
           {/* Grid pattern overlay with fade effect */}
           <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none">
             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#0d1117] to-transparent" />
@@ -30,16 +30,16 @@ export function GridBackgroundDemo() {
           </div>
 
           {/* Main content container */}
-          <div className="relative flex flex-col items-center justify-start pt-12 px-4 space-y-8">
+          <div className="relative flex flex-col items-center justify-start pt-12 px-4 md:px-6 lg:px-8 space-y-8 max-w-[100vw]">
             <div className="w-full max-w-2xl">
               <FlipWordsDemo />
             </div>
 
-            <div className="text-center space-y-1">
-              <p className="text-lg md:text-xl text-gray-400 font-medium">
+            <div className="text-center space-y-1 px-4">
+              <p className="text-base md:text-lg lg:text-xl text-gray-400 font-medium">
                 Learn Effortlessly: Convert PDFs into Scrollable Flashcards!
               </p>
-              <p className="text-lg md:text-xl text-gray-400 font-medium">
+              <p className="text-base md:text-lg lg:text-xl text-gray-400 font-medium">
                 Now learning is just a scroll away!
               </p>
             </div>
@@ -47,18 +47,20 @@ export function GridBackgroundDemo() {
             <HoverBorderGradient
               containerClassName="rounded"
               as="button"
-              className="bg-[#0d1117] text-[#4ff0d1] hover:text-white flex items-center space-x-2"
+              className="bg-[#0d1117] text-[#4ff0d1] hover:text-white flex items-center space-x-2 px-4 py-2"
             >
               <span>Get started Now</span> 
             </HoverBorderGradient>
 
-            <div className="w-full max-w-2xl mt-8">
+            <div className="w-full max-w-2xl">
               <FileUploadDemo />
             </div>
-            <div className="">
+            
+            <div className="w-full overflow-hidden">
               <InfiniteMovingCardsDemo />
             </div>
-            <div>
+            
+            <div className="w-full">
               <Footer />
             </div>
           </div>
