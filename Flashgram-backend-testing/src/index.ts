@@ -96,6 +96,7 @@ app.get("/urFlashcards",async(req,res)=>{
         }
       })
     }
+    console.log("error is: ",e)
     res.status(500).json({
       error:e,
       msg:"No flashcard available"
