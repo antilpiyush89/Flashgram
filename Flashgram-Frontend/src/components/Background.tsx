@@ -35,22 +35,22 @@ export function GridBackgroundDemo() {
               <FlipWordsDemo />
             </div>
 
-            <div className="text-center space-y-1 px-4">
+            <div className="text-center space-y-0 px-4">
               <p className="text-base md:text-lg lg:text-xl text-gray-400 font-medium">
                 Learn Effortlessly: Convert PDFs into Scrollable Flashcards!
               </p>
-              <p className="text-base md:text-lg lg:text-xl text-gray-400 font-medium">
+              {/* <p className="text-base md:text-lg lg:text-xl text-gray-400 font-medium">
                 Now learning is just a scroll away!
-              </p>
+              </p> */}
             </div>
 
-            <HoverBorderGradient
+            {/* <HoverBorderGradient
               containerClassName="rounded"
               as="button"
               className="bg-[#0d1117] text-[#4ff0d1] hover:text-white flex items-center space-x-2 px-4 py-2"
             >
               <span>Get started Now</span> 
-            </HoverBorderGradient>
+            </HoverBorderGradient> */}
 
             <div className="w-full max-w-2xl">
               <FileUploadDemo />

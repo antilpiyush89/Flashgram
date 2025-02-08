@@ -5,7 +5,7 @@ export function FlipWordsDemo() {
   const words = ["Efficiently", "Uniquely", "Better", "Easily"];
 
   return (
-    <div className="h-[28rem] flex justify-center items-center px-4">
+    <div className="h-[15rem] flex justify-center items-center px-4">
       <div className="text-4xl md:text-5xl mx-auto font-bold text-gray-200 text-center">
         Learn{" "}
         <FlipWords 

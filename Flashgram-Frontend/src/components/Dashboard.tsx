@@ -89,7 +89,7 @@ export const Dashboard = ({
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#40e6b4]" />
-                      <h4 className="text-[#40e6b4] sf-pro">Physics Notes</h4>
+                      <h4 className="text-[#40e6b4] sf-pro">Flashcard 1</h4>
                     </div>
                     <p className="text-gray-400 text-sm sf-pro ml-3.5">
                       Last edited 2 days ago
