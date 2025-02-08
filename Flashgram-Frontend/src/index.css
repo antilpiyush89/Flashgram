@@ -30,6 +30,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem
   }
+  
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -298,4 +299,8 @@ html {
 * {
   scrollbar-width: thin;
   scrollbar-color: #3ad1b3 transparent;
+}
+
+.text-glow-green {
+  text-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14, 0 0 30px #39FF14;
 }
