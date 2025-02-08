@@ -1,5 +1,81 @@
-export function Flash() {
-    return <div>
-       <svg className="h-8 px-2" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g fill="none"> <circle cx="16" cy="16" r="16" fill="#0072FF"></circle> <path fill="#FFF" d="M24.027 12.803L19.215 23.5h-1.923l5.065-11.26a5.384 5.384 0 011.67.563zm-8.42-6.284L8.204 22.978C6.316 22.082 5 20.119 5 17.833c0-3.13 2.462-5.666 5.5-5.666 0-2.995 2.254-5.44 5.107-5.648zm5.894 5.648L16.402 23.5h-2.083l6.402-14.23c.493.848.78 1.836.78 2.897zm1.894 10.982l3.266-7.256c.216.608.339 1.26.339 1.943 0 2.438-1.5 4.515-3.605 5.313zm1.442-9.814c.456.36.86.788 1.186 1.279l-3.986 8.858a5.025 5.025 0 01-.536.028h-1.236l4.572-10.165zM16.02 6.5c.78.003 1.519.174 2.19.481L10.78 23.5h-.28c-.69 0-1.35-.136-1.957-.377L16.02 6.5zm4.267 2.118L13.592 23.5h-2.246l7.327-16.285c.622.358 1.17.836 1.614 1.403z"></path> </g> </g></svg>
-    </div>
+import { motion } from "framer-motion";
+
+export function Flash({ className }: { className?: string }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Base layer with gradient fill */}
+      <path
+        d="M13 3L4 14H12L11 21L20 10H12L13 3Z"
+        fill="url(#gradient-fill)"
+        filter="url(#shadow)"
+      />
+
+      {/* Highlight layer */}
+      <path
+        d="M13 3L4 14H12L11 21L20 10H12L13 3Z"
+        fill="url(#highlight)"
+        opacity="0.6"
+      />
+
+      {/* Animated outline */}
+      <motion.path
+        d="M13 3L4 14H12L11 21L20 10H12L13 3Z"
+        stroke="url(#stroke-gradient)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ 
+          pathLength: [0, 1, 1],
+          opacity: [0, 1, 0]
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+          times: [0, 0.5, 1]
+        }}
+      />
+
+      {/* Definitions for gradients and filters */}
+      <defs>
+        {/* Main gradient fill */}
+        <linearGradient id="gradient-fill" x1="4" y1="3" x2="20" y2="21">
+          <stop offset="0%" stopColor="#4ff0d1" />
+          <stop offset="100%" stopColor="#3ad1b3" />
+        </linearGradient>
+
+        {/* Highlight gradient */}
+        <linearGradient id="highlight" x1="4" y1="3" x2="20" y2="21">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
+
+        {/* Stroke gradient */}
+        <linearGradient id="stroke-gradient" x1="4" y1="3" x2="20" y2="21">
+          <stop offset="0%" stopColor="#4ff0d1" />
+          <stop offset="100%" stopColor="#2fb399" />
+        </linearGradient>
+
+        {/* Shadow filter */}
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
+          <feOffset dx="0" dy="1" result="offsetblur" />
+          <feFlood floodColor="#4ff0d1" floodOpacity="0.3" />
+          <feComposite in2="offsetblur" operator="in" />
+          <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
+  );
 }
